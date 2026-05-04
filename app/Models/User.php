@@ -3,9 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
+    use HasApiTokens;
+
+    // ... resto del código igual
     protected $table = 'users';
     protected $primaryKey = 'identificacion_usuario';
     public $incrementing = false;
