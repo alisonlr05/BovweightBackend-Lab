@@ -16,6 +16,20 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: sistema_pesaje
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
@@ -24,7 +38,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
-          extensions: mbstring, pdo, pdo_sqlite, sqlite3, xml, bcmath
+          extensions: mbstring, pdo, pdo_mysql, xml, bcmath
           coverage: none
 
       - name: Instalar dependencias con Composer
@@ -33,8 +47,20 @@ jobs:
       - name: Copiar archivo de entorno
         run: cp .env.example .env
 
+      - name: Configurar variables de entorno para MySQL
+        run: |
+          echo "DB_CONNECTION=mysql" >> .env
+          echo "DB_HOST=127.0.0.1" >> .env
+          echo "DB_PORT=3306" >> .env
+          echo "DB_DATABASE=sistema_pesaje" >> .env
+          echo "DB_USERNAME=root" >> .env
+          echo "DB_PASSWORD=root" >> .env
+
       - name: Generar clave de aplicación
         run: php artisan key:generate
+
+      - name: Ejecutar migraciones
+        run: php artisan migrate --force
 
       - name: Ejecutar pruebas con PHPUnit
         run: php artisan test
